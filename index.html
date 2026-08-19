@@ -8,11 +8,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #f3f4f6; overflow: hidden; }
+        body { background-color: #f3f4f6; overflow: hidden; margin: 0; padding: 0; width: 100vw; height: 100vh; }
         .canvas-container { margin: 0 auto; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); border-radius: 8px; }
     </style>
 </head>
-<body class="h-screen flex flex-col font-sans">
+<body class="w-screen h-screen flex flex-col font-sans overflow-hidden">
 
     <header class="bg-slate-900 text-white px-6 py-3 flex justify-between items-center shadow-md z-10">
         <div class="flex items-center space-x-3">
@@ -29,9 +29,23 @@
         </div>
     </header>
 
-    <div class="flex flex-1 relative overflow-hidden">
+    <div class="flex flex-1 relative overflow-hidden w-full h-full">
         
-        <aside class="w-1/5 min-w-[240px] bg-white border-r border-gray-200 p-5 flex flex-col space-y-6 overflow-y-auto shadow-sm z-10">
+        <!-- Draggable Floating Settings Button -->
+        <div id="floating-paint-btn" class="fixed bottom-6 right-6 z-50 cursor-pointer select-none" style="touch-action: none;">
+            <div class="w-14 h-14 bg-cyan-600 hover:bg-cyan-700 text-white rounded-full shadow-2xl flex items-center justify-center transition transform hover:scale-105 active:scale-95 border-2 border-white">
+                <i class="fa-solid fa-paint-brush text-2xl"></i>
+            </div>
+        </div>
+
+        <!-- Floating Pop-up Settings Panel -->
+        <div id="settings-popup" class="fixed bottom-24 right-6 w-80 max-h-[80vh] bg-white border border-gray-200 p-5 flex flex-col space-y-6 overflow-y-auto shadow-2xl rounded-2xl z-50 hidden transition-all duration-200">
+            <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+                <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider">Canvas & Brush Settings</h3>
+                <button id="close-settings" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
             
             <div>
                 <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Interactions</h3>
@@ -48,52 +62,52 @@
             <hr class="border-gray-100">
 
             <div>
-                            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Styling</h3>
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-xs text-gray-500 mb-1 font-medium">Stroke / Brush Color</label>
-                                    <div class="flex items-center gap-3">
-                                        <input type="color" id="color-picker" value="#06b6d4" class="w-10 h-10 border-0 rounded cursor-pointer">
-                                        <span id="color-hex" class="text-sm text-gray-600 font-mono w-16">#06b6d4</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-gray-500 mb-1 font-medium">Fill Color</label>
-                                    <div class="flex items-center gap-3">
-                                        <input type="color" id="fill-picker" value="#ffffff" class="w-10 h-10 border-0 rounded cursor-pointer">
-                                        <span id="fill-hex" class="text-sm text-gray-600 font-mono w-16">None</span>
-                                        <button id="btn-no-fill" class="text-[10px] text-red-500 px-2 py-1 border border-red-200 rounded hover:bg-red-50 transition">No Fill</button>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-gray-500 mb-1 font-medium">Opacity (<span id="opacity-val">100</span>%)</label>
-                                    <input type="range" id="opacity-slider" min="1" max="100" value="100" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-cyan-600">
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-gray-500 mb-1 font-medium">Brush / Border Size (<span id="brush-size-val">5</span>px)</label>
-                                    <input type="range" id="brush-size" min="1" max="50" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-cyan-600">
-                                </div>
-                            </div>
+                <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Styling</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1 font-medium">Stroke / Brush Color</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" id="color-picker" value="#06b6d4" class="w-10 h-10 border-0 rounded cursor-pointer">
+                            <span id="color-hex" class="text-sm text-gray-600 font-mono w-16">#06b6d4</span>
                         </div>
-
-                        <hr class="border-gray-100">
-
-                        <div>
-                            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Layer Actions</h3>
-                            <div class="grid grid-cols-3 gap-2">
-                                <button onclick="bringForward()" title="Bring Forward" class="flex items-center justify-center gap-2 py-2 px-2 border border-gray-200 hover:bg-gray-50 rounded-lg text-sm text-gray-700 transition">
-                                    <i class="fa-solid fa-arrow-up"></i>
-                                </button>
-                                <button onclick="sendBackward()" title="Send Backward" class="flex items-center justify-center gap-2 py-2 px-2 border border-gray-200 hover:bg-gray-50 rounded-lg text-sm text-gray-700 transition">
-                                    <i class="fa-solid fa-arrow-down"></i>
-                                </button>
-                                <button onclick="duplicateObject()" title="Duplicate" class="flex items-center justify-center gap-2 py-2 px-2 border border-gray-200 hover:bg-gray-50 rounded-lg text-sm text-gray-700 transition">
-                                    <i class="fa-solid fa-copy"></i>
-                                </button>
-                            </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1 font-medium">Fill Color</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" id="fill-picker" value="#ffffff" class="w-10 h-10 border-0 rounded cursor-pointer">
+                            <span id="fill-hex" class="text-sm text-gray-600 font-mono w-16">None</span>
+                            <button id="btn-no-fill" class="text-[10px] text-red-500 px-2 py-1 border border-red-200 rounded hover:bg-red-50 transition">No Fill</button>
                         </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1 font-medium">Opacity (<span id="opacity-val">100</span>%)</label>
+                        <input type="range" id="opacity-slider" min="1" max="100" value="100" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-cyan-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1 font-medium">Brush / Border Size (<span id="brush-size-val">5</span>px)</label>
+                        <input type="range" id="brush-size" min="1" max="50" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-cyan-600">
+                    </div>
+                </div>
+            </div>
 
-                        <hr class="border-gray-100">
+            <hr class="border-gray-100">
+
+            <div>
+                <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Layer Actions</h3>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="bringForward()" title="Bring Forward" class="flex items-center justify-center gap-2 py-2 px-2 border border-gray-200 hover:bg-gray-50 rounded-lg text-sm text-gray-700 transition">
+                        <i class="fa-solid fa-arrow-up"></i>
+                    </button>
+                    <button onclick="sendBackward()" title="Send Backward" class="flex items-center justify-center gap-2 py-2 px-2 border border-gray-200 hover:bg-gray-50 rounded-lg text-sm text-gray-700 transition">
+                        <i class="fa-solid fa-arrow-down"></i>
+                    </button>
+                    <button onclick="duplicateObject()" title="Duplicate" class="flex items-center justify-center gap-2 py-2 px-2 border border-gray-200 hover:bg-gray-50 rounded-lg text-sm text-gray-700 transition">
+                        <i class="fa-solid fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+
+            <hr class="border-gray-100">
 
             <div>
                 <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Add Geometry Shapes</h3>
@@ -129,14 +143,13 @@
                 </div>
                 <p class="text-[11px] text-gray-400 mt-2"><i class="fa-solid fa-info-circle"></i> Tip: Select any object and press <b>Delete</b> on your keyboard to remove it.</p>
             </div>
+        </div>
 
-        </aside>
-
-        <main class="flex-1 flex items-center justify-center p-2 relative">
-                    <div id="canvas-wrapper" class="w-full h-full bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200">
-                        <canvas id="whiteboard"></canvas>
-                    </div>
-                </main>
+        <main class="flex-1 flex items-center justify-center p-0 relative w-full h-full">
+            <div id="canvas-wrapper" class="w-full h-full bg-white overflow-hidden">
+                <canvas id="whiteboard"></canvas>
+            </div>
+        </main>
     </div>
 
     <script>
@@ -145,28 +158,110 @@
 
         // Initialize Application Components on window load
         window.addEventListener('DOMContentLoaded', () => {
-                    // Instantiate dynamic canvas sizing based on viewport window space available
-                    const wrapper = document.getElementById('canvas-wrapper');
-                    const displayWidth = wrapper.clientWidth; 
-                    const displayHeight = wrapper.clientHeight;
+            // Instantiate dynamic canvas sizing based on full viewport window space available
+            const wrapper = document.getElementById('canvas-wrapper');
+            const displayWidth = window.innerWidth; 
+            const displayHeight = window.innerHeight - document.querySelector('header').offsetHeight;
 
-                    canvas = new fabric.Canvas('whiteboard', {
-                        width: displayWidth,
-                        height: displayHeight,
-                        backgroundColor: '#ffffff',
-                        isDrawingMode: false
-                    });
+            canvas = new fabric.Canvas('whiteboard', {
+                width: displayWidth,
+                height: displayHeight,
+                backgroundColor: '#ffffff',
+                isDrawingMode: false
+            });
 
-                    window.addEventListener('resize', () => {
-                        canvas.setWidth(wrapper.clientWidth);
-                        canvas.setHeight(wrapper.clientHeight);
-                        canvas.renderAll();
-                    });
+            window.addEventListener('resize', () => {
+                canvas.setWidth(window.innerWidth);
+                canvas.setHeight(window.innerHeight - document.querySelector('header').offsetHeight);
+                canvas.renderAll();
+            });
 
-                    // Initialize Event Listeners for UI sliders/controls
+            // Initialize Event Listeners for UI sliders/controls
             setupControlListeners();
             setupKeyboardDelete();
+            setupDraggablePopup();
         });
+
+        // Setup Draggable Floating Button & Popup Toggle
+        function setupDraggablePopup() {
+            const floatBtn = document.getElementById('floating-paint-btn');
+            const popup = document.getElementById('settings-popup');
+            const closeBtn = document.getElementById('close-settings');
+
+            let isDragging = false;
+            let hasMoved = false;
+            let startX, startY;
+            let initialX, initialY;
+
+            floatBtn.addEventListener('pointerdown', (e) => {
+                isDragging = true;
+                hasMoved = false;
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                const rect = floatBtn.getBoundingClientRect();
+                initialX = rect.left;
+                initialY = rect.top;
+
+                floatBtn.setPointerCapture(e.pointerId);
+                e.preventDefault();
+            });
+
+            floatBtn.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+
+                if (Math.hypot(dx, dy) > 5) {
+                    hasMoved = true;
+                }
+
+                let newX = initialX + dx;
+                let newY = initialY + dy;
+
+                // Keep within window bounds
+                const maxX = window.innerWidth - floatBtn.offsetWidth;
+                const maxY = window.innerHeight - floatBtn.offsetHeight;
+                newX = Math.max(0, Math.min(newX, maxX));
+                newY = Math.max(0, Math.min(newY, maxY));
+
+                floatBtn.style.left = `${newX}px`;
+                floatBtn.style.top = `${newY}px`;
+                floatBtn.style.bottom = 'auto';
+                floatBtn.style.right = 'auto';
+            });
+
+            floatBtn.addEventListener('pointerup', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                floatBtn.releasePointerCapture(e.pointerId);
+
+                // If it was a click (not a drag), toggle popup
+                if (!hasMoved) {
+                    if (popup.classList.contains('hidden')) {
+                        popup.classList.remove('hidden');
+                        // Position popup near the button nicely
+                        const btnRect = floatBtn.getBoundingClientRect();
+                        let popupLeft = btnRect.right - 320;
+                        let popupTop = btnRect.top - popup.offsetHeight - 12;
+                        
+                        if (popupLeft < 10) popupLeft = 10;
+                        if (popupTop < 10) popupTop = btnRect.bottom + 12;
+
+                        popup.style.left = `${popupLeft}px`;
+                        popup.style.top = `${popupTop}px`;
+                        popup.style.bottom = 'auto';
+                        popup.style.right = 'auto';
+                    } else {
+                        popup.classList.add('hidden');
+                    }
+                }
+            });
+
+            closeBtn.addEventListener('click', () => {
+                popup.classList.add('hidden');
+            });
+        }
 
         // Toggle Application Modes (Object Selection vs Vector Drawing)
         function setMode(mode) {
@@ -186,135 +281,135 @@
         }
 
         // Configure event callbacks for color wheels and sizing inputs
-                function setupControlListeners() {
-                    const colorPicker = document.getElementById('color-picker');
-                    const fillPicker = document.getElementById('fill-picker');
-                    const opacitySlider = document.getElementById('opacity-slider');
-                    const brushSize = document.getElementById('brush-size');
+        function setupControlListeners() {
+            const colorPicker = document.getElementById('color-picker');
+            const fillPicker = document.getElementById('fill-picker');
+            const opacitySlider = document.getElementById('opacity-slider');
+            const brushSize = document.getElementById('brush-size');
 
-                    // Handle styling changes for brush engine and active objects
-                    colorPicker.addEventListener('input', (e) => {
-                        const color = e.target.value;
-                        document.getElementById('color-hex').textContent = color;
-                        canvas.freeDrawingBrush.color = color;
-                
-                        const activeObj = canvas.getActiveObject();
-                        if (activeObj) {
-                            if (activeObj.type === 'i-text') activeObj.set('fill', color);
-                            else activeObj.set('stroke', color);
-                            canvas.renderAll();
-                        }
-                    });
-
-                    fillPicker.addEventListener('input', (e) => {
-                        const color = e.target.value;
-                        document.getElementById('fill-hex').textContent = color;
-                        const activeObj = canvas.getActiveObject();
-                        if (activeObj && activeObj.type !== 'image' && activeObj.type !== 'line') {
-                            activeObj.set('fill', color);
-                            canvas.renderAll();
-                        }
-                    });
-
-                    document.getElementById('btn-no-fill').addEventListener('click', () => {
-                        document.getElementById('fill-hex').textContent = 'None';
-                        const activeObj = canvas.getActiveObject();
-                        if (activeObj && activeObj.type !== 'image' && activeObj.type !== 'line') {
-                            activeObj.set('fill', 'transparent');
-                            canvas.renderAll();
-                        }
-                    });
-
-                    opacitySlider.addEventListener('input', (e) => {
-                        const val = parseInt(e.target.value, 10);
-                        document.getElementById('opacity-val').textContent = val;
-                        const activeObj = canvas.getActiveObject();
-                        if (activeObj) {
-                            activeObj.set('opacity', val / 100);
-                            canvas.renderAll();
-                        }
-                    });
-
-                    brushSize.addEventListener('input', (e) => {
-                        const size = parseInt(e.target.value, 10);
-                        document.getElementById('brush-size-val').textContent = size;
-                        canvas.freeDrawingBrush.width = size;
-                        const activeObj = canvas.getActiveObject();
-                        if (activeObj && activeObj.type !== 'i-text' && activeObj.type !== 'image') {
-                            activeObj.set('strokeWidth', size);
-                            canvas.renderAll();
-                        }
-                    });
-
-                    // Handle file image insertion events
-                    document.getElementById('image-loader').addEventListener('change', handleMediaUpload);
-
-                    // Sync UI to selected object
-                    canvas.on('selection:created', syncUIToSelectedObject);
-                    canvas.on('selection:updated', syncUIToSelectedObject);
-
-                    // Set initial defaults
-                    canvas.freeDrawingBrush.color = colorPicker.value;
-                    canvas.freeDrawingBrush.width = parseInt(brushSize.value, 10);
+            // Handle styling changes for brush engine and active objects
+            colorPicker.addEventListener('input', (e) => {
+                const color = e.target.value;
+                document.getElementById('color-hex').textContent = color;
+                canvas.freeDrawingBrush.color = color;
+        
+                const activeObj = canvas.getActiveObject();
+                if (activeObj) {
+                    if (activeObj.type === 'i-text') activeObj.set('fill', color);
+                    else activeObj.set('stroke', color);
+                    canvas.renderAll();
                 }
+            });
 
-                // Sync Sidebar UI Controls to the currently selected canvas object
-                function syncUIToSelectedObject() {
-                    const activeObj = canvas.getActiveObject();
-                    if (!activeObj) return;
-
-                    if (activeObj.opacity !== undefined) {
-                        const opacityVal = Math.round(activeObj.opacity * 100);
-                        document.getElementById('opacity-slider').value = opacityVal;
-                        document.getElementById('opacity-val').textContent = opacityVal;
-                    }
-
-                    if (activeObj.strokeWidth) {
-                        document.getElementById('brush-size').value = activeObj.strokeWidth;
-                        document.getElementById('brush-size-val').textContent = activeObj.strokeWidth;
-                    }
-
-                    if (activeObj.type === 'i-text') {
-                        if (activeObj.fill) {
-                            document.getElementById('color-picker').value = activeObj.fill;
-                            document.getElementById('color-hex').textContent = activeObj.fill;
-                        }
-                    } else {
-                        if (activeObj.stroke) {
-                            document.getElementById('color-picker').value = activeObj.stroke;
-                            document.getElementById('color-hex').textContent = activeObj.stroke;
-                        }
-                        if (activeObj.fill && activeObj.fill !== 'transparent') {
-                            document.getElementById('fill-picker').value = activeObj.fill;
-                            document.getElementById('fill-hex').textContent = activeObj.fill;
-                        } else if (activeObj.fill === 'transparent') {
-                            document.getElementById('fill-hex').textContent = 'None';
-                        }
-                    }
+            fillPicker.addEventListener('input', (e) => {
+                const color = e.target.value;
+                document.getElementById('fill-hex').textContent = color;
+                const activeObj = canvas.getActiveObject();
+                if (activeObj && activeObj.type !== 'image' && activeObj.type !== 'line') {
+                    activeObj.set('fill', color);
+                    canvas.renderAll();
                 }
+            });
+
+            document.getElementById('btn-no-fill').addEventListener('click', () => {
+                document.getElementById('fill-hex').textContent = 'None';
+                const activeObj = canvas.getActiveObject();
+                if (activeObj && activeObj.type !== 'image' && activeObj.type !== 'line') {
+                    activeObj.set('fill', 'transparent');
+                    canvas.renderAll();
+                }
+            });
+
+            opacitySlider.addEventListener('input', (e) => {
+                const val = parseInt(e.target.value, 10);
+                document.getElementById('opacity-val').textContent = val;
+                const activeObj = canvas.getActiveObject();
+                if (activeObj) {
+                    activeObj.set('opacity', val / 100);
+                    canvas.renderAll();
+                }
+            });
+
+            brushSize.addEventListener('input', (e) => {
+                const size = parseInt(e.target.value, 10);
+                document.getElementById('brush-size-val').textContent = size;
+                canvas.freeDrawingBrush.width = size;
+                const activeObj = canvas.getActiveObject();
+                if (activeObj && activeObj.type !== 'i-text' && activeObj.type !== 'image') {
+                    activeObj.set('strokeWidth', size);
+                    canvas.renderAll();
+                }
+            });
+
+            // Handle file image insertion events
+            document.getElementById('image-loader').addEventListener('change', handleMediaUpload);
+
+            // Sync UI to selected object
+            canvas.on('selection:created', syncUIToSelectedObject);
+            canvas.on('selection:updated', syncUIToSelectedObject);
+
+            // Set initial defaults
+            canvas.freeDrawingBrush.color = colorPicker.value;
+            canvas.freeDrawingBrush.width = parseInt(brushSize.value, 10);
+        }
+
+        // Sync Sidebar UI Controls to the currently selected canvas object
+        function syncUIToSelectedObject() {
+            const activeObj = canvas.getActiveObject();
+            if (!activeObj) return;
+
+            if (activeObj.opacity !== undefined) {
+                const opacityVal = Math.round(activeObj.opacity * 100);
+                document.getElementById('opacity-slider').value = opacityVal;
+                document.getElementById('opacity-val').textContent = opacityVal;
+            }
+
+            if (activeObj.strokeWidth) {
+                document.getElementById('brush-size').value = activeObj.strokeWidth;
+                document.getElementById('brush-size-val').textContent = activeObj.strokeWidth;
+            }
+
+            if (activeObj.type === 'i-text') {
+                if (activeObj.fill) {
+                    document.getElementById('color-picker').value = activeObj.fill;
+                    document.getElementById('color-hex').textContent = activeObj.fill;
+                }
+            } else {
+                if (activeObj.stroke) {
+                    document.getElementById('color-picker').value = activeObj.stroke;
+                    document.getElementById('color-hex').textContent = activeObj.stroke;
+                }
+                if (activeObj.fill && activeObj.fill !== 'transparent') {
+                    document.getElementById('fill-picker').value = activeObj.fill;
+                    document.getElementById('fill-hex').textContent = activeObj.fill;
+                } else if (activeObj.fill === 'transparent') {
+                    document.getElementById('fill-hex').textContent = 'None';
+                }
+            }
+        }
 
         // Instantiates Vector Shapes into canvas view state hierarchy
-                function addShape(shapeType) {
-                    setMode('select'); // Default back to move/edit mode when inserting elements
-                    const color = document.getElementById('color-picker').value;
-                    const strokeWidth = parseInt(document.getElementById('brush-size').value, 10);
-                    const opacity = parseInt(document.getElementById('opacity-slider').value, 10) / 100;
-                    const fillType = document.getElementById('fill-hex').textContent === 'None' 
-                        ? 'transparent' 
-                        : document.getElementById('fill-picker').value;
-            
-                    let shapeObject;
-                    const config = {
-                        left: canvas.width / 2 - 50,
-                        top: canvas.height / 2 - 50,
-                        fill: fillType,
-                        stroke: color,
-                        strokeWidth: strokeWidth,
-                        opacity: opacity,
-                        cornerColor: '#06b6d4',
-                        cornerSize: 8,
-                        transparentCorners: false
-                    };
+        function addShape(shapeType) {
+            setMode('select'); // Default back to move/edit mode when inserting elements
+            const color = document.getElementById('color-picker').value;
+            const strokeWidth = parseInt(document.getElementById('brush-size').value, 10);
+            const opacity = parseInt(document.getElementById('opacity-slider').value, 10) / 100;
+            const fillType = document.getElementById('fill-hex').textContent === 'None' 
+                ? 'transparent' 
+                : document.getElementById('fill-picker').value;
+    
+            let shapeObject;
+            const config = {
+                left: canvas.width / 2 - 50,
+                top: canvas.height / 2 - 50,
+                fill: fillType,
+                stroke: color,
+                strokeWidth: strokeWidth,
+                opacity: opacity,
+                cornerColor: '#06b6d4',
+                cornerSize: 8,
+                transparentCorners: false
+            };
 
             switch(shapeType) {
                 case 'rect':
@@ -343,22 +438,22 @@
         }
 
         // Instantiates editable rich text modules
-                function addText() {
-                    setMode('select');
-                    const color = document.getElementById('color-picker').value;
-                    const opacity = parseInt(document.getElementById('opacity-slider').value, 10) / 100;
-                    const textNode = new fabric.IText('Double click to edit text', {
-                        left: canvas.width / 2 - 100,
-                        top: canvas.height / 2 - 20,
-                        fontFamily: 'sans-serif',
-                        fill: color,
-                        opacity: opacity,
-                        fontSize: 24,
-                        cornerColor: '#06b6d4'
-                    });
-                    canvas.add(textNode);
-                    canvas.setActiveObject(textNode);
-                }
+        function addText() {
+            setMode('select');
+            const color = document.getElementById('color-picker').value;
+            const opacity = parseInt(document.getElementById('opacity-slider').value, 10) / 100;
+            const textNode = new fabric.IText('Double click to edit text', {
+                left: canvas.width / 2 - 100,
+                top: canvas.height / 2 - 20,
+                fontFamily: 'sans-serif',
+                fill: color,
+                opacity: opacity,
+                fontSize: 24,
+                cornerColor: '#06b6d4'
+            });
+            canvas.add(textNode);
+            canvas.setActiveObject(textNode);
+        }
 
         // Media Stream Processing: Standard Images and Web-Agnostic Assets (including GIFs)
         function handleMediaUpload(e) {
@@ -394,41 +489,41 @@
         }
 
         // Layering and Object Action Helpers
-                function bringForward() {
-                    const activeObj = canvas.getActiveObject();
-                    if (activeObj) { canvas.bringForward(activeObj); canvas.renderAll(); }
-                }
+        function bringForward() {
+            const activeObj = canvas.getActiveObject();
+            if (activeObj) { canvas.bringForward(activeObj); canvas.renderAll(); }
+        }
 
-                function sendBackward() {
-                    const activeObj = canvas.getActiveObject();
-                    if (activeObj) { canvas.sendBackwards(activeObj); canvas.renderAll(); }
-                }
+        function sendBackward() {
+            const activeObj = canvas.getActiveObject();
+            if (activeObj) { canvas.sendBackwards(activeObj); canvas.renderAll(); }
+        }
 
-                function duplicateObject() {
-                    const activeObj = canvas.getActiveObject();
-                    if (activeObj) {
-                        activeObj.clone(function(cloned) {
-                            canvas.discardActiveObject();
-                            cloned.set({
-                                left: cloned.left + 20,
-                                top: cloned.top + 20,
-                                evented: true,
-                            });
-                            if (cloned.type === 'activeSelection') {
-                                cloned.canvas = canvas;
-                                cloned.forEachObject(function(obj) { canvas.add(obj); });
-                                cloned.setCoords();
-                            } else {
-                                canvas.add(cloned);
-                            }
-                            canvas.setActiveObject(cloned);
-                            canvas.requestRenderAll();
-                        });
+        function duplicateObject() {
+            const activeObj = canvas.getActiveObject();
+            if (activeObj) {
+                activeObj.clone(function(cloned) {
+                    canvas.discardActiveObject();
+                    cloned.set({
+                        left: cloned.left + 20,
+                        top: cloned.top + 20,
+                        evented: true,
+                    });
+                    if (cloned.type === 'activeSelection') {
+                        cloned.canvas = canvas;
+                        cloned.forEachObject(function(obj) { canvas.add(obj); });
+                        cloned.setCoords();
+                    } else {
+                        canvas.add(cloned);
                     }
-                }
+                    canvas.setActiveObject(cloned);
+                    canvas.requestRenderAll();
+                });
+            }
+        }
 
-                // Global Event Hook to listen to native hardware delete keys 
-                function setupKeyboardDelete() {
+        // Global Event Hook to listen to native hardware delete keys 
+        function setupKeyboardDelete() {
             window.addEventListener('keydown', (e) => {
                 if (e.key === 'Delete' || e.key === 'Backspace') {
                     // Avoid firing delete if user is currently typing within a text object
