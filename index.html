@@ -32,15 +32,15 @@
     <div class="flex flex-1 relative overflow-hidden w-full h-full">
         
         <!-- Draggable Floating Settings Button -->
-                <div id="floating-paint-btn" class="fixed bottom-10 right-6 z-[100] cursor-pointer select-none" style="touch-action: none;">
+                <div id="floating-paint-btn" class="fixed bottom-24 right-6 z-[100] cursor-pointer select-none" style="touch-action: none;">
                     <div class="w-14 h-14 bg-cyan-600 hover:bg-cyan-700 text-white rounded-full shadow-2xl flex items-center justify-center transition transform hover:scale-105 active:scale-95 border-2 border-white">
                         <i class="fa-solid fa-paintbrush text-2xl"></i>
                     </div>
                 </div>
 
         <!-- Floating Pop-up Settings Panel -->
-        <div id="settings-popup" class="fixed bottom-24 right-6 w-80 max-h-[80vh] bg-white border border-gray-200 p-5 flex flex-col space-y-6 overflow-y-auto shadow-2xl rounded-2xl z-50 hidden transition-all duration-200">
-            <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+                <div id="settings-popup" class="fixed bottom-40 right-6 w-72 max-h-[75vh] bg-white border border-gray-200 p-4 flex flex-col space-y-4 overflow-y-auto shadow-2xl rounded-2xl z-50 hidden transition-all duration-200">
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-3">
                 <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider">Canvas & Brush Settings</h3>
                 <button id="close-settings" class="text-gray-400 hover:text-gray-600">
                     <i class="fa-solid fa-xmark text-lg"></i>
@@ -241,9 +241,9 @@
                     if (popup.classList.contains('hidden')) {
                         popup.classList.remove('hidden');
                         // Position popup near the button nicely
-                        const btnRect = floatBtn.getBoundingClientRect();
-                        let popupLeft = btnRect.right - 320;
-                        let popupTop = btnRect.top - popup.offsetHeight - 12;
+                                                const btnRect = floatBtn.getBoundingClientRect();
+                                                let popupLeft = btnRect.right - popup.offsetWidth;
+                                                let popupTop = btnRect.top - popup.offsetHeight - 12;
                         
                         if (popupLeft < 10) popupLeft = 10;
                         if (popupTop < 10) popupTop = btnRect.bottom + 12;
